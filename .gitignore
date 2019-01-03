@@ -1,0 +1,5 @@
+local_settings.ini
+env
+.idea
+__pycache__
+.vscode

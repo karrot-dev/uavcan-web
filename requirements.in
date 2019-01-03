@@ -1,0 +1,6 @@
+-e git+https://github.com/UAVCAN/pyuavcan.git#egg=uavcan
+Flask
+blinker
+gunicorn
+pyyaml
+yapf
