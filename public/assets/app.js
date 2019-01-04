@@ -16,6 +16,22 @@ async function fetchNodeParams (nodeId) {
   return data
 }
 
+async function fetchNodeParam (nodeId, param) {
+  const res = await fetch (`/api/nodes/${nodeId}/params/${param}`)
+  const data = await res.json()
+  return data
+}
+
+async function setNodeParam (nodeId, param, value) {
+  const res = await fetch (`/api/nodes/${nodeId}/params/${param}`,{
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({value})
+  })
+  const data = await res.json()
+  return data
+}
+
 async function start (Component, routes) {
   const router = new VueRouter({routes})
   const app = new Vue({
@@ -107,8 +123,45 @@ const UApp = {
   `
 }
 
+const UFanControl = {
+  data() {
+    return {
+      nodeId: 10,
+      paramName: 'CONFIG_DIMMER_DUTY_CYCLE',
+      percentage: null
+    }
+  },
+  created() {
+    this.refresh()
+  },
+  methods: {
+    async submit() {
+      console.log('submitted', this.percentage)
+      const result = await setNodeParam(this.nodeId, this.paramName, parseInt(this.percentage, 10))
+      this.percentage = result.value.integer_value
+    },
+    async refresh() {
+      this.percentage = (await fetchNodeParam(this.nodeId, this.paramName)).value.integer_value
+    }
+  },
+  template: `
+  <div>
+    <form @submit="submit">
+      <label>Fan Speed [%]</label> <input type="number" min="0" max="100" v-model="percentage">
+      <button type="submit">set</button>
+      <button @click.stop.prevent="refresh">refresh</button>
+    </form>
+  </div>
+  `
+}
 const UHome = {
-  template: `<p>Hello</p>`
+  components: {UFanControl},
+  template: `
+    <div>
+      <h3>Dashboard</h3>
+      <UFanControl/>
+    </div>
+  `
 }
 
 const routes = [
