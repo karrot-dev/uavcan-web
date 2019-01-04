@@ -10,6 +10,12 @@ async function fetchNodeDetail (nodeId) {
   return data
 }
 
+async function fetchNodeParams (nodeId) {
+  const res = await fetch (`/api/nodes/${nodeId}/params`)
+  const data = await res.json()
+  return data
+}
+
 async function start (Component, routes) {
   const router = new VueRouter({routes})
   const app = new Vue({
@@ -41,11 +47,16 @@ const UNodeDetail = {
     nodeDetail: {
       type: Object,
       required: false
+    },
+    nodeParams: {
+      type: Object,
+      required: false
     }
   },
   template: `
     <div v-if="nodeDetail" class="UNodeDetail">
       <h1>{{ nodeDetail.name }}</h1>
+      <pre>{{ nodeParams }}</pre>
       <pre>{{ nodeDetail }}</pre>
     </div>
   `
@@ -56,6 +67,7 @@ const UNodeDetailPage = {
   data () {
     return {
       nodeDetail: null,
+      nodeParams: null,
     }
   },
   async beforeRouteUpdate (to, from, next) {
@@ -68,10 +80,12 @@ const UNodeDetailPage = {
   methods: {
     async updateNodeDetail (nodeId) {
       this.nodeDetail = null
+      this.nodeParams = null
       this.nodeDetail = await fetchNodeDetail(nodeId)
+      this.nodeParams = await fetchNodeParams(nodeId)
     }
   },
-  template: `<UNodeDetail :nodeDetail="nodeDetail"/>`
+  template: `<UNodeDetail :nodeDetail="nodeDetail" :nodeParams="nodeParams"/>`
 }
 
 const UNav = {

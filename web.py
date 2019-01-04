@@ -103,7 +103,7 @@ def uavcan_list_params(node_id):
         if inflight_requests == 0:
             break
 
-    return jsonify({'params': params})
+    return jsonify(params)
 
 
 @app.route("/api/nodes/<int:node_id>/params/<name>", methods=['GET', 'POST'])
