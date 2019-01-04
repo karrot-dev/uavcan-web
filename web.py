@@ -73,7 +73,6 @@ def uavcan_request(node_id, name):
     if flask_request.method == 'POST':
         if flask_request.json is not None:
             value = flask_request.json.get('value')
-            print('request value/type:', type(value), value)
             if isinstance(value, int):
                 request_data['value'] = uavcan.protocol.param.Value(integer_value=value)
             else:
@@ -94,7 +93,8 @@ def root():
 
 
 def run_uavcan(node_infos, request_queue):
-    uavcan.load_dsdl(os.path.join(os.path.dirname(__file__), 'dsdl_files', 'homeautomation'))
+    if getattr(uavcan.thirdparty, 'homeautomation', None) is None:
+        uavcan.load_dsdl(os.path.join(os.path.dirname(__file__), 'dsdl_files', 'homeautomation'))
 
     node_info = uavcan.protocol.GetNodeInfo.Response()
     node_info.name = config.get('node', 'name')
