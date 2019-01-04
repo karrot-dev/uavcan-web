@@ -66,6 +66,7 @@ def node_status(node_id):
     data = make_request(node_id, uavcan.protocol.GetNodeInfo.Request())
     return jsonify(data)
 
+
 def extract_union_value(value):
     field = value._fields[value._union_field]
     if getattr(field._type, 'is_string_like', False):
@@ -73,9 +74,10 @@ def extract_union_value(value):
     else:
         return field.value
 
+
 @app.route("/api/nodes/<int:node_id>/params", methods=['GET'])
 def uavcan_list_params(node_id):
-    parallel_count = 5      # if set to 7 or higher, we get a None response from pyuavcan for the last item
+    parallel_count = 5  # if set to 7 or higher, we get a None response from pyuavcan for the last item
     inflight_requests = 0
     index = 0
     params = []
@@ -97,15 +99,12 @@ def uavcan_list_params(node_id):
         if len(name) == 0:
             received_empty_response = True
         else:
-            params.append(
-                {
-                    'name': name,
-                    'value': extract_union_value(payload.value)
-                })
+            params.append({'name': name, 'value': extract_union_value(payload.value)})
         if inflight_requests == 0:
             break
 
     return jsonify({'params': params})
+
 
 @app.route("/api/nodes/<int:node_id>/params/<name>", methods=['GET', 'POST'])
 def uavcan_param_getset(node_id, name):
@@ -117,7 +116,7 @@ def uavcan_param_getset(node_id, name):
                 request_data['value'] = uavcan.protocol.param.Value(integer_value=value)
             else:
                 request_data['value'] = uavcan.protocol.param.Value(string_value=str(value))
-            
+
     data = make_request(node_id, uavcan.protocol.param.GetSet.Request(**request_data))
     return jsonify(data)
 
