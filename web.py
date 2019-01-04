@@ -66,9 +66,49 @@ def node_status(node_id):
     data = make_request(node_id, uavcan.protocol.GetNodeInfo.Request())
     return jsonify(data)
 
+def extract_union_value(value):
+    field = value._fields[value._union_field]
+    if getattr(field._type, 'is_string_like', False):
+        return field.decode()
+    else:
+        return field.value
+
+@app.route("/api/nodes/<int:node_id>/params", methods=['GET'])
+def uavcan_list_params(node_id):
+    parallel_count = 5      # if set to 7 or higher, we get a None response from pyuavcan for the last item
+    inflight_requests = 0
+    index = 0
+    params = []
+    response_queue = queue.Queue()
+    received_empty_response = False
+    while True:
+        while inflight_requests < parallel_count and not received_empty_response:
+            request_queue.put({
+                'node_id': node_id,
+                'request': uavcan.protocol.param.GetSet.Request(index=index),
+                'response_queue': response_queue
+            })
+            index += 1
+            inflight_requests += 1
+        data = response_queue.get(timeout=10)
+        inflight_requests -= 1
+        payload = data.transfer.payload
+        name = str(payload.name)
+        if len(name) == 0:
+            received_empty_response = True
+        else:
+            params.append(
+                {
+                    'name': name,
+                    'value': extract_union_value(payload.value)
+                })
+        if inflight_requests == 0:
+            break
+
+    return jsonify({'params': params})
 
 @app.route("/api/nodes/<int:node_id>/params/<name>", methods=['GET', 'POST'])
-def uavcan_request(node_id, name):
+def uavcan_param_getset(node_id, name):
     request_data = {'name': name}
     if flask_request.method == 'POST':
         if flask_request.json is not None:
