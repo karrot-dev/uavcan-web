@@ -59,16 +59,16 @@ const UNodeDetailPage = {
     }
   },
   async beforeRouteUpdate (to, from, next) {
-    this.updateNodeDetail()
+    this.updateNodeDetail(to.params.nodeId)
     next()
   },
   created () {
-    this.updateNodeDetail()
+    this.updateNodeDetail(this.$route.params.nodeId)
   },
   methods: {
-    async updateNodeDetail () {
+    async updateNodeDetail (nodeId) {
       this.nodeDetail = null
-      this.nodeDetail = await fetchNodeDetail(this.$route.params.nodeId)
+      this.nodeDetail = await fetchNodeDetail(nodeId)
     }
   },
   template: `<UNodeDetail :nodeDetail="nodeDetail"/>`
