@@ -67,13 +67,19 @@ def node_status(node_id):
     return jsonify(data)
 
 
-@app.route("/api/nodes/<int:node_id>/<action>", methods=['POST'])
-def uavcan_request(node_id, action):
-    request_data = flask_request.json
-    if request_data is None:
-        request_data = {}
-    Request = get_request_class(action)
-    data = make_request(node_id, Request(**request_data))
+@app.route("/api/nodes/<int:node_id>/params/<name>", methods=['GET', 'POST'])
+def uavcan_request(node_id, name):
+    request_data = {'name': name}
+    if flask_request.method == 'POST':
+        if flask_request.json is not None:
+            value = flask_request.json.get('value')
+            print('request value/type:', type(value), value)
+            if isinstance(value, int):
+                request_data['value'] = uavcan.protocol.param.Value(integer_value=value)
+            else:
+                request_data['value'] = uavcan.protocol.param.Value(string_value=str(value))
+            
+    data = make_request(node_id, uavcan.protocol.param.GetSet.Request(**request_data))
     return jsonify(data)
 
 
