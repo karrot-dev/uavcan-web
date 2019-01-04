@@ -1,0 +1,30 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: arial, sans-serif;
+}
+
+.UNav ul {
+    padding: 0;
+}
+
+.UNav li {
+    list-style: none;
+    display: inline-block;
+}
+
+.UNav a {
+    display: block;
+    padding: 5px 10px;
+    margin: 4px;
+    background-color: #eee;
+    text-decoration: none;
+    color: #000;
+}
+
+.UNav a.router-link-active {
+    background-color: #333;
+    color: #fff;
+}

@@ -9,7 +9,7 @@ import uavcan
 import yaml
 from collections import defaultdict
 from datetime import datetime
-from flask import Flask, jsonify, request as flask_request
+from flask import Flask, jsonify, request as flask_request, send_from_directory
 
 app = Flask(__name__)
 
@@ -75,6 +75,16 @@ def uavcan_request(node_id, action):
     Request = get_request_class(action)
     data = make_request(node_id, Request(**request_data))
     return jsonify(data)
+
+
+@app.route('/<path:path>')
+def send_public(path):
+    return send_from_directory('public', path)
+
+
+@app.route('/')
+def root():
+    return send_public('index.html')
 
 
 def run_uavcan(node_infos, request_queue):
