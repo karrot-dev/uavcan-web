@@ -201,6 +201,29 @@ sudo ip link set dev vcan0 up
 cannelloni -S c -R 192.168.178.164 -t 10000
 ```
 
+## Configuration
+
+You can use an `.ini` file, or environment variables, e.g.:
+
+```
+[canbus]
+
+ifname = vcan0
+
+[node]
+
+id = 110
+name = uavcan-web-dev
+```
+
+Is the same as:
+
+| env var name | value |
+| --- | --- |
+| CANBUS__IFNAME | vcan0 |
+| NODE__ID | 110 |
+| NODE__NAME | uvcan-web-dev |
+
 ## Deployment
 
 You can run it with gunicorn like this: 
@@ -208,6 +231,29 @@ You can run it with gunicorn like this:
 ```
 gunicorn web:app
 ```
+
+## Docker
+
+You can also run it in a docker.
+
+First built the image:
+
+```
+docker build . -t uavcan-web
+```
+
+Then run it with some options:
+
+```
+docker run --init --rm -it \
+  -e CANBUS__IFNAME=vcan0 \
+  -e NODE__ID=110 \
+  -e NODE__NAME=uavcan-web \
+  --network=host \
+  uavcan-web
+```
+
+(note: we need the `--network=host` to access the can interface, it means it won't have any network seperation though, there might be a way to pass it through, I didn't investigate much)
 
 ## TODO
 
