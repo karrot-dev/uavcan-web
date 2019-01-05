@@ -123,12 +123,37 @@ const UApp = {
   `
 }
 
+function calculateEffectiveDutyCycle(intendedDutyCycle, periodInHalfWaves) {
+  return 100 * Math.floor((intendedDutyCycle * periodInHalfWaves) / 100) / periodInHalfWaves
+}
+
+function calculateBestOptions(intendedDutyCycle) {
+  const minPeriodInHalfWaves = 5
+  const maxPeriodInHalfWaves = 19
+  let periodInHalfWaves = minPeriodInHalfWaves
+  const options = []
+  while (periodInHalfWaves < maxPeriodInHalfWaves) {
+    const dutyCycle = calculateEffectiveDutyCycle(intendedDutyCycle, periodInHalfWaves)
+    options.push({
+      periodInHalfWaves,
+      dutyCycle,
+      diff: Math.abs(intendedDutyCycle - dutyCycle)
+    })
+    periodInHalfWaves += 2 // only odd numbers
+  }
+  return options.sort((a, b) => a.diff - b.diff)[0]
+}
+
 const UFanControl = {
   data() {
     return {
       nodeId: 10,
-      paramName: 'CONFIG_DIMMER_DUTY_CYCLE',
-      percentage: null
+      setOptimalPeriodInHalfWaves: true,
+      dutyCycleParam: 'CONFIG_DIMMER_DUTY_CYCLE',
+      dutyCycle: null,
+      dutyCycleEdit: null,
+      periodInHalfWavesParam: 'CONFIG_DIMMER_PERIOD_IN_HALFWAVES',
+      periodInHalfWaves: null
     }
   },
   created() {
@@ -136,20 +161,51 @@ const UFanControl = {
   },
   methods: {
     async submit() {
-      console.log('submitted', this.percentage)
-      const result = await setNodeParam(this.nodeId, this.paramName, parseInt(this.percentage, 10))
-      this.percentage = result.value.integer_value
+      const dutyCycleResult = await setNodeParam(this.nodeId, this.dutyCycleParam, parseInt(this.dutyCycleEdit, 10))
+      this.dutyCycle = dutyCycleResult.value.integer_value
+      this.dutyCycleEdit = this.dutyCycle
+
+      if (this.setOptimalPeriodInHalfWaves) {
+        const {periodInHalfWaves} = calculateBestOptions(this.dutyCycle)
+        const periodInHalfWavesResult = await setNodeParam(this.nodeId, this.periodInHalfWavesParam, periodInHalfWaves)
+        this.periodInHalfWaves = periodInHalfWavesResult.value.integer_value
+      }
     },
     async refresh() {
-      this.percentage = (await fetchNodeParam(this.nodeId, this.paramName)).value.integer_value
+      this.dutyCycle = (await fetchNodeParam(this.nodeId, this.dutyCycleParam)).value.integer_value
+      this.dutyCycleEdit = this.dutyCycle
+      this.periodInHalfWaves = (await fetchNodeParam(this.nodeId, this.periodInHalfWavesParam)).value.integer_value
+    },
+    roundTo2DP(num) {
+      return Math.round(num * 100) / 100
+    }
+  },
+  computed: {
+    hasChanged () {
+      return this.dutyCycle !== this.dutyCycleEdit
+    },
+    effectiveDutyCycle() {
+      if (this.dutyCycle === null || this.periodInHalfWaves === null) return
+      return calculateEffectiveDutyCycle(this.dutyCycle, this.periodInHalfWaves)
+    },
+    suggested () {
+      return calculateBestOptions(this.dutyCycleEdit)
     }
   },
   template: `
-  <div>
+  <div class="UFanControl" :class="{ changed: hasChanged }">
     <form @submit="submit">
-      <label>Fan Speed [%]</label> <input type="number" min="0" max="100" v-model="percentage">
+      <label>Fan Speed [%]</label> <input type="number" min="0" max="100" v-model.number="dutyCycleEdit">
       <button type="submit">set</button>
       <button @click.stop.prevent="refresh">refresh</button>
+      <br/>
+      <label>
+        <input type="checkbox" v-model="setOptimalPeriodInHalfWaves">
+        set period to {{ suggested.periodInHalfWaves }} (effective fan speed {{ roundTo2DP(suggested.dutyCycle) }}%)
+      </label>
+      <div class="current">
+        current period is {{ periodInHalfWaves }}, effective fan speed is {{ roundTo2DP(effectiveDutyCycle) }}%
+      </div>
     </form>
   </div>
   `
