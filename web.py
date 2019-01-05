@@ -136,11 +136,11 @@ def run_uavcan(node_infos, request_queue):
         uavcan.load_dsdl(os.path.join(os.path.dirname(__file__), 'dsdl_files', 'homeautomation'))
 
     node_info = uavcan.protocol.GetNodeInfo.Response()
-    node_info.name = config.get('node', 'name')
+    node_info.name = os.environ.get('NODE__NAME', config.get('node', 'name'))
 
     node = uavcan.make_node(
-        config.get('canbus', 'ifname'),
-        node_id=config.getint('node', 'id'),
+        os.environ.get('CANBUS__IFNAME', config.get('canbus', 'ifname')),
+        node_id=int(os.environ.get('NODE__NAME', config.getint('node', 'id'))),
         node_info=node_info,
     )
 
