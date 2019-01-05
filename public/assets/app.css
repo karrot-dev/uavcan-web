@@ -2,6 +2,15 @@
     box-sizing: border-box;
 }
 
+table.node-params th {
+    text-align: right;
+}
+
+table.node-params th,
+table.node-params td {
+    padding: 2px 5px;
+}
+
 body {
     font-family: arial, sans-serif;
     font-size: 16px;
@@ -25,7 +34,7 @@ body {
     color: #000;
 }
 
-.UNav a.router-link-active {
+.UNav a.router-link-exact-active {
     background-color: #333;
     color: #fff;
 }
@@ -45,4 +54,8 @@ body {
 
 .UFanControl.changed {
     background-color: #eee;
+}
+
+.error {
+    color: red;
 }

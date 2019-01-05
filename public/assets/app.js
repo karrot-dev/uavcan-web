@@ -1,29 +1,30 @@
-async function fetchNodeList () {
-  const res = await fetch('/api/nodes')
+async function fetchNodeList (options = {}) {
+  const res = await fetch('/api/nodes', options)
   const data = await res.json()
   return data.nodes.sort((a, b) => a.id - b.id)
 }
 
-async function fetchNodeDetail (nodeId) {
-  const res = await fetch(`/api/nodes/${nodeId}`)
+async function fetchNodeDetail (nodeId, options = {}) {
+  const res = await fetch(`/api/nodes/${nodeId}`, options)
   const data = await res.json()
   return data
 }
 
-async function fetchNodeParams (nodeId) {
-  const res = await fetch (`/api/nodes/${nodeId}/params`)
+async function fetchNodeParams (nodeId, options = {}) {
+  const res = await fetch (`/api/nodes/${nodeId}/params`, options)
   const data = await res.json()
   return data
 }
 
-async function fetchNodeParam (nodeId, param) {
-  const res = await fetch (`/api/nodes/${nodeId}/params/${param}`)
+async function fetchNodeParam (nodeId, param, options = {}) {
+  const res = await fetch (`/api/nodes/${nodeId}/params/${param}`, options)
   const data = await res.json()
   return data
 }
 
-async function setNodeParam (nodeId, param, value) {
+async function setNodeParam (nodeId, param, value, options = {}) {
   const res = await fetch (`/api/nodes/${nodeId}/params/${param}`,{
+    ...options,
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({value})
@@ -51,6 +52,9 @@ const UNodeList = {
   },
   template: `
     <ul class="UNodeList">
+      <li>
+        <router-link :to="{ name: 'dashboard' }">dashboard</router-link>
+      </li>
       <li v-for="node in nodes">
         <router-link :to="{ name: 'nodeDetail', params: { nodeId: node.id } }">node {{ node.id }}</router-link>
       </li>
@@ -58,22 +62,74 @@ const UNodeList = {
   `
 }
 
+function isAbortError(err) {
+  return err.name === 'AbortError'
+}
+
 const UNodeDetail = {
   props: {
-    nodeDetail: {
-      type: Object,
-      required: false
+    nodeId: {
+      type: Number,
+      required: true
     },
-    nodeParams: {
-      type: Object,
-      required: false
+  },
+  data () {
+    return {
+      hideZeroValues: true,
+      nodeDetail: null,
+      nodeParams: null,
+      errors: [],
+      abortController: null
+    }
+  },
+  created () {
+    this.refresh()
+  },
+  watch: {
+    nodeId() {
+      this.refresh()
+    }
+  },
+  methods: {
+    async refresh() {
+      if (this.abortController) {
+        this.abortController.abort()
+      }
+      this.abortController = new AbortController()
+      this.nodeDetail = null
+      this.nodeParams = null
+      this.errors = []
+      try {
+        this.nodeDetail = await fetchNodeDetail(this.nodeId, {signal: this.abortController.signal})
+      } catch (err) {
+        if (!isAbortError(err)) {
+          this.errors.push(err)
+        }
+      }
+      try {
+        this.nodeParams = await fetchNodeParams(this.nodeId, {signal: this.abortController.signal})
+      } catch (err) {
+        if (!isAbortError(err)) {
+          this.errors.push(err)
+        }
+      }
     }
   },
   template: `
     <div v-if="nodeDetail" class="UNodeDetail">
       <h1>{{ nodeDetail.name }}</h1>
-      <pre>{{ nodeParams }}</pre>
-      <pre>{{ nodeDetail }}</pre>
+      <label><input type="checkbox" v-model="hideZeroValues"> hide zero values</label>
+      <table class="node-params">
+        <tr v-for="param in nodeParams" v-if="!hideZeroValues || param.value !== 0">
+          <th>{{ param.name }}</th>
+          <td>{{ param.value }}</td>
+        </tr>
+      </table>
+      <div v-if="errors.length > 0">
+        <div v-for="error in errors" class="error">
+          {{ error.message }}
+        </div>
+      </div>
     </div>
   `
 }
@@ -82,26 +138,17 @@ const UNodeDetailPage = {
   components: {UNodeDetail},
   data () {
     return {
-      nodeDetail: null,
-      nodeParams: null,
+      nodeId: null
     }
   },
   async beforeRouteUpdate (to, from, next) {
-    this.updateNodeDetail(to.params.nodeId)
+    this.nodeId = to.params.nodeId
     next()
   },
   created () {
-    this.updateNodeDetail(this.$route.params.nodeId)
+    this.nodeId = this.$route.params.nodeId
   },
-  methods: {
-    async updateNodeDetail (nodeId) {
-      this.nodeDetail = null
-      this.nodeParams = null
-      this.nodeDetail = await fetchNodeDetail(nodeId)
-      this.nodeParams = await fetchNodeParams(nodeId)
-    }
-  },
-  template: `<UNodeDetail :nodeDetail="nodeDetail" :nodeParams="nodeParams"/>`
+  template: `<UNodeDetail v-if="nodeId" :nodeId="nodeId"/>`
 }
 
 const UNav = {
@@ -221,7 +268,7 @@ const UHome = {
 }
 
 const routes = [
-  {path: '/', component: UHome, name: 'home'},
+  {path: '/', component: UHome, name: 'dashboard'},
   {path: '/nodes/:nodeId', component: UNodeDetailPage, name: 'nodeDetail'},
 ]
 
