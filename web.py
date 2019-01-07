@@ -140,7 +140,7 @@ def run_uavcan(node_infos, request_queue):
 
     node = uavcan.make_node(
         os.environ.get('CANBUS__IFNAME', config.get('canbus', 'ifname')),
-        node_id=int(os.environ.get('NODE__NAME', config.getint('node', 'id'))),
+        node_id=int(os.environ.get('NODE__ID', config.getint('node', 'id'))),
         node_info=node_info,
     )
 
