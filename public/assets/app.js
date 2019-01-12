@@ -156,13 +156,8 @@ const UApp = {
           <span class="navbar-item">
             <img class="kanthaus-logo" src="https://assets.gitlab-static.net/uploads/-/system/group/avatar/1902422/prototype.png?width=68" width="112" height="28">
           </span>
-        </div>
-
-        <div class="navbar-menu">
-          <div class="navbar-start">
-            <router-link class="navbar-item" :to="{ name: 'dashboard' }">dashboard</router-link>
-            <router-link class="navbar-item" :to="{ name: 'debug' }">debug</router-link>
-          </div>
+          <router-link class="navbar-item" :to="{ name: 'dashboard' }">dashboard</router-link>
+          <router-link class="navbar-item" :to="{ name: 'debug' }">debug</router-link>
         </div>
       </nav>
       
