@@ -51,10 +51,7 @@ const UNodeList = {
     this.nodes = await fetchNodeList()
   },
   template: `
-    <ul class="UNodeList">
-      <li>
-        <router-link :to="{ name: 'dashboard' }">dashboard</router-link>
-      </li>
+    <ul class="nav-list">
       <li v-for="node in nodes">
         <router-link :to="{ name: 'nodeDetail', params: { nodeId: node.id } }">node {{ node.id }}</router-link>
       </li>
@@ -151,20 +148,24 @@ const UNodeDetailPage = {
   template: `<UNodeDetail v-if="nodeId" :nodeId="nodeId"/>`
 }
 
-const UNav = {
-  components: {UNodeList},
-  template: `
-    <div class="UNav">
-      <UNodeList/>
-    </div>
-  `
-}
-
 const UApp = {
-  components: {UNav},
   template: `
     <div>
-      <UNav/>
+      <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+          <span class="navbar-item">
+            <img class="kanthaus-logo" src="https://assets.gitlab-static.net/uploads/-/system/group/avatar/1902422/prototype.png?width=68" width="112" height="28">
+          </span>
+        </div>
+
+        <div class="navbar-menu">
+          <div class="navbar-start">
+            <router-link class="navbar-item" :to="{ name: 'dashboard' }">dashboard</router-link>
+            <router-link class="navbar-item" :to="{ name: 'debug' }">debug</router-link>
+          </div>
+        </div>
+      </nav>
+      
       <RouterView></RouterView>
     </div>
   `
@@ -240,16 +241,32 @@ const UFanControl = {
     }
   },
   template: `
-  <div class="UFanControl" :class="{ changed: hasChanged }">
+  <div class="UFanControl">
     <form @submit="submit">
-      <label>Fan Speed [%]</label> <input type="number" min="0" max="100" v-model.number="dutyCycleEdit">
-      <button type="submit">set</button>
-      <button @click.stop.prevent="refresh">refresh</button>
-      <br/>
-      <label>
+
+      <div class="field">
+        <label class="label is-large">Fan speed</label>
+        <div class="control">
+          <input class="input is-large" type="number" min="0" max="100" v-model.number="dutyCycleEdit">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="checkbox">
         <input type="checkbox" v-model="setOptimalPeriodInHalfWaves">
         set period to {{ suggested.periodInHalfWaves }} (effective fan speed {{ roundTo2DP(suggested.dutyCycle) }}%)
-      </label>
+        </label>
+      </div>
+
+      <div class="field is-grouped is-grouped-right">
+        <p class="control">
+          <button class="button is-large" @click.stop.prevent="refresh">refresh</button>
+        </p>
+        <p class="control">
+          <button class="button is-large" :class="{ 'is-primary': hasChanged }" :disabled="!hasChanged" type="submit">set</button>
+        </p>
+      </div>
+
       <div class="current">
         current period is {{ periodInHalfWaves }}, effective fan speed is {{ roundTo2DP(effectiveDutyCycle) }}%
       </div>
@@ -261,15 +278,39 @@ const UHome = {
   components: {UFanControl},
   template: `
     <div>
-      <h3>Dashboard</h3>
       <UFanControl/>
     </div>
   `
 }
 
+const UDebug = {
+  components: {UNodeList},
+  template: `
+    <div>
+      <UNodeList/>
+      <RouterView></RouterView>
+    </div>
+  `
+}
+
 const routes = [
-  {path: '/', component: UHome, name: 'dashboard'},
-  {path: '/nodes/:nodeId', component: UNodeDetailPage, name: 'nodeDetail'},
+  {
+    path: '/',
+    component: UHome,
+    name: 'dashboard',
+  },
+  {
+    path: '/debug',
+    component: UDebug,
+    name: 'debug',
+    children: [
+      {
+        path: 'nodes/:nodeId',
+        component: UNodeDetailPage,
+        name: 'nodeDetail',
+      },
+    ]
+  },
 ]
 
 start(UApp, routes)

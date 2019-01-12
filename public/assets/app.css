@@ -6,6 +6,10 @@ table.node-params th {
     text-align: right;
 }
 
+.kanthaus-logo {
+    max-width: 1.75rem;
+}
+
 table.node-params th,
 table.node-params td {
     padding: 2px 5px;
@@ -16,16 +20,16 @@ body {
     font-size: 16px;
 }
 
-.UNav ul {
+ul.nav-list {
     padding: 0;
 }
 
-.UNav li {
+ul.nav-list li {
     list-style: none;
     display: inline-block;
 }
 
-.UNav a {
+ul.nav-list a {
     display: block;
     padding: 5px 10px;
     margin: 4px;
@@ -34,26 +38,22 @@ body {
     color: #000;
 }
 
-.UNav a.router-link-exact-active {
-    background-color: #333;
-    color: #fff;
+a.router-link-exact-active,
+a.router-link-exact-active:hover {
+    background-color: #333 !important;
+    color: #fff  !important;
 }
 
 .UFanControl {
     max-width: 500px;
-    border: 5px solid #F012BE ;
-    padding: 10px;
     background-color: #fff;
+    padding: 20px;
 }
 
 .UFanControl .current {
     padding: 5px 10px;
     margin-top: 5px;
     background-color: #FFDC00 ;
-}
-
-.UFanControl.changed {
-    background-color: #eee;
 }
 
 .error {
