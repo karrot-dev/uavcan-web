@@ -56,6 +56,12 @@ a.router-link-exact-active:hover {
     background-color: #FFDC00 ;
 }
 
+.UHeaterControl {
+    max-width: 500px;
+    background-color: #fff;
+    padding: 20px;
+}
+
 .error {
     color: red;
 }

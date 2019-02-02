@@ -157,10 +157,11 @@ const UApp = {
             <img class="kanthaus-logo" src="https://assets.gitlab-static.net/uploads/-/system/group/avatar/1902422/prototype.png?width=68" width="112" height="28">
           </span>
           <router-link class="navbar-item" :to="{ name: 'dashboard' }">dashboard</router-link>
+          <router-link class="navbar-item" :to="{ name: 'heater' }">heater</router-link>
           <router-link class="navbar-item" :to="{ name: 'debug' }">debug</router-link>
         </div>
       </nav>
-      
+
       <RouterView></RouterView>
     </div>
   `
@@ -269,11 +270,86 @@ const UFanControl = {
   </div>
   `
 }
+const UHeaterControl = {
+  data() {
+    return {
+      nodeId: 9,
+      heaterStartParam: 'CONFIG_HEATER_TIME_1_START',
+      heaterStartTime: null,
+      heaterStartTimeEdit: null,
+      heaterStopParam: 'CONFIG_HEATER_TIME_1_STOP',
+      heaterStopTime: null,
+      heaterStopTimeEdit: null,
+    }
+  },
+  created() {
+    this.refresh()
+  },
+  methods: {
+    async submit() {
+      const heaterStartResult = await setNodeParam(this.nodeId, this.heaterStartParam, parseInt(this.heaterStartTimeEdit, 10))
+      this.heaterStartTime = this.heaterStartTimeEdit = heaterStartResult.value.integer_value
+      const heaterStopResult = await setNodeParam(this.nodeId, this.heaterStopParam, parseInt(this.heaterStopTimeEdit, 10))
+      this.heaterStopTime = this.heaterStopTimeEdit = heaterStopResult.value.integer_value
+    },
+    async refresh() {
+      this.heaterStartTime = this.heaterStartTimeEdit = (await fetchNodeParam(this.nodeId, this.heaterStartParam)).value.integer_value
+      this.heaterStopTime = this.heaterStopTimeEdit = (await fetchNodeParam(this.nodeId, this.heaterStopParam)).value.integer_value
+    },
+    roundTo2DP(num) {
+      return Math.round(num * 100) / 100
+    },
+  },
+  computed: {
+    hasChanged () {
+      return this.heaterStartTime !== this.heaterStartTimeEdit || this.heaterStopTime !== this.heaterStopTimeEdit
+    },
+  },
+  template: `
+  <div class="UHeaterControl">
+    <form @submit="submit">
+
+      <div class="field">
+        <label class="label is-large">Heater Start Time</label>
+        <div class="control">
+          <input class="input is-large" type="number" v-model.number="heaterStartTimeEdit">
+        </div>
+      </div>
+
+    <div class="field">
+      <label class="label is-large">Heater Stop Time</label>
+      <div class="control">
+        <input class="input is-large" type="number" v-model.number="heaterStopTimeEdit">
+      </div>
+    </div>
+
+      <div class="field is-grouped is-grouped-right">
+        <p class="control">
+          <button class="button is-large" @click.stop.prevent="refresh">refresh</button>
+        </p>
+        <p class="control">
+          <button class="button is-large" :class="{ 'is-primary': hasChanged }" :disabled="!hasChanged" type="submit">set</button>
+        </p>
+      </div>
+    </form>
+  </div>
+  `
+}
+
 const UHome = {
   components: {UFanControl},
   template: `
     <div>
       <UFanControl/>
+    </div>
+  `
+}
+
+const UHeater = {
+  components: {UHeaterControl},
+  template: `
+    <div>
+      <UHeaterControl/>
     </div>
   `
 }
@@ -293,6 +369,11 @@ const routes = [
     path: '/',
     component: UHome,
     name: 'dashboard',
+  },
+  {
+    path: '/heater',
+    component: UHeater,
+    name: 'heater',
   },
   {
     path: '/debug',
