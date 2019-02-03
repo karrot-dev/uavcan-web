@@ -287,17 +287,32 @@ const UHeaterControl = {
   },
   methods: {
     async submit() {
-      const heaterStartResult = await setNodeParam(this.nodeId, this.heaterStartParam, parseInt(this.heaterStartTimeEdit, 10))
-      this.heaterStartTime = this.heaterStartTimeEdit = heaterStartResult.value.integer_value
-      const heaterStopResult = await setNodeParam(this.nodeId, this.heaterStopParam, parseInt(this.heaterStopTimeEdit, 10))
-      this.heaterStopTime = this.heaterStopTimeEdit = heaterStopResult.value.integer_value
+      this.heaterStartTime = this.heaterStartTimeEdit = await this.setTime(this.heaterStartParam, this.heaterStartTimeEdit)
+      this.heaterStopTime = this.heaterStopTimeEdit = await this.setTime(this.heaterStopParam, this.heaterStopTimeEdit)
     },
     async refresh() {
-      this.heaterStartTime = this.heaterStartTimeEdit = (await fetchNodeParam(this.nodeId, this.heaterStartParam)).value.integer_value
-      this.heaterStopTime = this.heaterStopTimeEdit = (await fetchNodeParam(this.nodeId, this.heaterStopParam)).value.integer_value
+      this.heaterStartTime = this.heaterStartTimeEdit = await this.fetchTime(this.heaterStartParam)
+      this.heaterStopTime = this.heaterStopTimeEdit = await this.fetchTime(this.heaterStopParam)
     },
-    roundTo2DP(num) {
-      return Math.round(num * 100) / 100
+    async fetchTime(param) {
+      return this.toJS((await fetchNodeParam(this.nodeId, param)).value.integer_value)
+    },
+    async setTime(param, val) {
+      return this.toJS((await setNodeParam(this.nodeId, param, this.toRaw(val))).value.integer_value)
+    },
+    tzOffset () {
+      return -1*(new Date()).getTimezoneOffset() / 60
+    },
+    toJS(raw) {
+      const hours = '0' + (Math.floor(raw / 256) + this.tzOffset())
+      const minutes = Math.min(raw % 256, 59) + '0'
+      const time = `${hours.slice(hours.length - 2, hours.length)}:${minutes.slice(0, 2)}`
+      return time
+    },
+    toRaw(time) {
+      const [hours, minutes] = time.split(':')
+      const raw = (parseInt(hours, 10) - this.tzOffset())*256 + parseInt(minutes, 10)
+      return raw
     },
   },
   computed: {
@@ -310,18 +325,20 @@ const UHeaterControl = {
     <form @submit="submit">
 
       <div class="field">
-        <label class="label is-large">Heater Start Time</label>
+        <label class="label is-large">Start Time</label>
         <div class="control">
-          <input class="input is-large" type="number" v-model.number="heaterStartTimeEdit">
+          <input class="input is-large" type="time" v-model="heaterStartTimeEdit">
         </div>
       </div>
 
-    <div class="field">
-      <label class="label is-large">Heater Stop Time</label>
-      <div class="control">
-        <input class="input is-large" type="number" v-model.number="heaterStopTimeEdit">
+      <div class="field">
+        <label class="label is-large">Stop Time</label>
+        <div class="control">
+          <input class="input is-large" type="time" v-model="heaterStopTimeEdit">
+        </div>
       </div>
-    </div>
+
+      <p>Time values are in local time, not UTC!</p>
 
       <div class="field is-grouped is-grouped-right">
         <p class="control">
