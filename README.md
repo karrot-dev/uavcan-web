@@ -2,13 +2,27 @@
 
 *status*: early stage
 
+## Frontend
+
+For frontend-only development, you can use the devserver that proxies backend requests to `http://kanthaus-server/`.
+
+Run
+
+```
+yarn dev
+```
+
+Then edit the files in the `public` directory and reload the page after.
+
+## Backend
+
 System dependencies are:
 * python3
 * pip
 * virtualenv (optional)
 * the can driver thing (not sure the name or how to check, hopefully it's just in your kernel already)
 
-## Quickstart
+### Quickstart
 
 Create and activate virtualenv:
 
@@ -31,7 +45,7 @@ pip-sync
 
 Create a local configuration file, e.g. `local_settings.ini`:
 
-``` 
+```
 [canbus]
 
 ifname = vcan0
@@ -48,11 +62,11 @@ Then start the dev server:
 python web.py local_settings.ini
 ```
 
-## API
+### API
 
 The application exposes an HTTP API:
 
-### GET /api/nodes
+#### GET /api/nodes
 
 Return a list of nodes and when they were last seen, e.g.:
 
@@ -76,7 +90,7 @@ curl -s http://127.0.0.1:8000/api/nodes
 ```
 
 
-### GET /api/nodes/:node_id
+#### GET /api/nodes/:node_id
 
 Get information about a specific node, e.g.:
 
@@ -127,7 +141,7 @@ curl -s http://127.0.0.1:8000/api/nodes/6 | jq .
 }
 ```
 
-### POST /api/nodes/:node_id/:action
+#### POST /api/nodes/:node_id/:action
 
 Make a node request, action will get `uavcan.` prepended to it (e.g. `protocol.GetNodeInfo` -> `uavcan.protocol.GetNodeInfo`).
 
@@ -180,9 +194,9 @@ curl -s -XPOST http://localhost:8000/api/nodes/5/protocol.GetNodeInfo | jq .
     "vendor_specific_status_code": 3288
   }
 }
-``` 
+```
 
-## Style
+### Style
 
 Run:
 
@@ -190,7 +204,7 @@ Run:
 yapf -i web.py
 ```
 
-## Cannelloni
+### Cannelloni
 
 If you want to connect to the uavcan network from your laptop, install cannelloni then run:
 
@@ -201,7 +215,7 @@ sudo ip link set dev vcan0 up
 cannelloni -S c -R 192.168.178.164 -t 10000
 ```
 
-## Configuration
+### Configuration
 
 You can use an `.ini` file, or environment variables, e.g.:
 
@@ -224,9 +238,9 @@ Is the same as:
 | NODE__ID | 110 |
 | NODE__NAME | uvcan-web-dev |
 
-## Deployment
+### Deployment
 
-You can run it with gunicorn like this: 
+You can run it with gunicorn like this:
 
 ```
 gunicorn web:app
@@ -260,4 +274,3 @@ docker run --init --rm -it \
 - [ ] add basic error handling
 - [ ] whitelist valid actions
 - [ ] make sure actions can accept the parameters via json post (didn't try it, probably doesn't quite work)
-- [ ] make a basic web UI

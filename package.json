@@ -1,0 +1,13 @@
+{
+  "name": "uavcan-web",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.4",
+    "http-proxy-middleware": "^0.19.1"
+  },
+  "scripts": {
+    "dev": "node ./devserver.js"
+  }
+}
