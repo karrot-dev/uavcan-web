@@ -156,7 +156,7 @@ const UApp = {
           <span class="navbar-item">
             <img class="kanthaus-logo" src="https://assets.gitlab-static.net/uploads/-/system/group/avatar/1902422/prototype.png?width=68" width="112" height="28">
           </span>
-          <router-link class="navbar-item" :to="{ name: 'dashboard' }">dashboard</router-link>
+          <router-link class="navbar-item" :to="{ name: 'ventilation' }">ventilation</router-link>
           <router-link class="navbar-item" :to="{ name: 'heater' }">heater</router-link>
           <router-link class="navbar-item" :to="{ name: 'debug' }">debug</router-link>
         </div>
@@ -353,7 +353,7 @@ const UHeaterControl = {
   `
 }
 
-const UHome = {
+const UVentilation = {
   components: {UFanControl},
   template: `
     <div>
@@ -384,8 +384,12 @@ const UDebug = {
 const routes = [
   {
     path: '/',
-    component: UHome,
-    name: 'dashboard',
+    redirect: { name: 'ventilation' }
+  },
+  {
+    path: '/ventilation',
+    component: UVentilation,
+    name: 'ventilation',
   },
   {
     path: '/heater',
