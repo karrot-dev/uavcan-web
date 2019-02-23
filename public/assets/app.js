@@ -33,6 +33,10 @@ async function setNodeParam (nodeId, param, value, options = {}) {
   return data
 }
 
+function zeroPad(val, digits = 2) {
+  return ('0' + val).slice(-digits)
+}
+
 async function start (Component, routes) {
   const router = new VueRouter({routes})
   const app = new Vue({
@@ -304,10 +308,9 @@ const UHeaterControl = {
       return -1*(new Date()).getTimezoneOffset() / 60
     },
     toJS(raw) {
-      const hours = '0' + (Math.floor(raw / 256) + this.tzOffset())
-      const minutes = Math.min(raw % 256, 59) + '0'
-      const time = `${hours.slice(hours.length - 2, hours.length)}:${minutes.slice(0, 2)}`
-      return time
+      const hours = Math.floor(raw / 256) + this.tzOffset()
+      const minutes = Math.min(raw % 256, 59)
+      return `${zeroPad(hours)}:${zeroPad(minutes)}`
     },
     toRaw(time) {
       const [hours, minutes] = time.split(':')
